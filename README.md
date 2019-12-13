@@ -24,7 +24,7 @@ The main drowbacks of this implementation:
 Take a look at the example folder and the comments in the cad_projector class.
 
 ## Data
-Apple fruit mesh downloaded from [here] (https://www.myminifactory.com/object/3d-print-apple-3d-scan-59317)
+Apple fruit mesh downloaded from [here](https://www.myminifactory.com/object/3d-print-apple-3d-scan-59317)
 
 ## Contributing
 If you want to contribute back, please open an issue or make a pull request.
