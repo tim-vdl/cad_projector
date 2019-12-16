@@ -30,5 +30,17 @@ Apple fruit mesh downloaded from [here](https://www.myminifactory.com/object/3d-
 ## Contributing
 If you want to contribute back, please open an issue or make a pull request.
 
-
-
+## Cite
+Please cite this repository in your publications if it helps your research.
+```
+@misc{tim_vandelooverbosch_2019_15991,
+  author  = {Tim Van De Looverbosch},
+  title   = {CAD Projector},
+  month   = dec,
+  year    = 2019,
+  doi     = {10.5281/zenodo.3577548},
+  version = {0.0.0},
+  publisher = {Zenodo},
+  url = {https://doi.org/10.5281/zenodo.3577548}
+  }
+```
