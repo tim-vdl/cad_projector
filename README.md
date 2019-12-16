@@ -1,4 +1,5 @@
 # CAD projector
+[![DOI](https://zenodo.org/badge/227818805.svg)](https://zenodo.org/badge/latestdoi/227818805)
 
 Tool to simulate projections from 3D shapes, e.g., meshes, in arbitrary geometries. Possible applications are simulation of X-ray or optical transmission projections.
 
