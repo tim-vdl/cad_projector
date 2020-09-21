@@ -1,6 +1,6 @@
 %% Define a geometry of the system
-geometry.source_origin_distance     = [0 0 500];
-geometry.detector_origin_distance   = [0 0 -500];
+geometry.source_origin_vector     = [0 0 500];
+geometry.detector_origin_vector   = [0 0 -500];
 geometry.pixel_size                 = 1;
 geometry.detector_size_px           = [250, 250];
 geometry.detector_normal            = [0 0.5 1];
@@ -34,16 +34,18 @@ hold on
 scatter3(my_cad_projector.detector_points(:,1),...
     my_cad_projector.detector_points(:,2),...
     my_cad_projector.detector_points(:,3));
-scatter3(my_cad_projector.source_position(1),...
-    my_cad_projector.source_position(2),...
-    my_cad_projector.source_position(3), 20, 'filled');
+scatter3(my_cad_projector.source_origin_vector(1),...
+    my_cad_projector.source_origin_vector(2),...
+    my_cad_projector.source_origin_vector(3), 20, 'filled');
 axis equal; view(3); rotate3d on
 xlabel('X')
 ylabel('Y')
 zlabel('Z')
 
 %% Simulate the projection using Lambert-Beer law
+tic
 projection = my_cad_projector.get_projection(mesh,...
                                              'LambertBeer', true,...
                                              'LinearAttenuationCoeff', 0.0015);
+toc
 figure;imshow(mat2gray(projection))
