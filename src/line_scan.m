@@ -1,14 +1,12 @@
 clear;
 clc;
 %% Define the conveyorbelt
-conv_belt.direction = unit_vect([0, 1, 0]);
-conv_belt.normal = unit_vect([0.1,0,0.9]);
-conv_belt.speed = 270;
-conv_belt.speed_vector = conv_belt.speed * conv_belt.direction;
-conv_belt.tilt = cross(conv_belt.direction, conv_belt.normal);
-conv_belt.plane = [[0, 0, 0], conv_belt.direction, conv_belt.tilt];
-conv_belt.trigger = [-75 * conv_belt.direction + 30 * conv_belt.normal,...
-    conv_belt.tilt];
+conv_belt = ConveyorBelt([0, 1, 0],...      % direction
+                         [0.1,0,0.9],...    % normal
+                         270,...            % speed
+                         -75,...            % trigger position
+                         30,...             % trigger height
+                         0);                % delay
 
 %% Define a geometry of the system
 geometry.source_origin_vector   = [0, 0, 471.8];
@@ -17,7 +15,6 @@ geometry.detector_origin_vector = [0, 0, -152.5];
 trans = createRotationOx(deg2rad(26));
 geometry.source_origin_vector = transformPoint3d(geometry.source_origin_vector, trans);
 geometry.detector_origin_vector = transformPoint3d(geometry.detector_origin_vector, trans);
-
 
 geometry.pixel_size             = 8 * 1.3500e-01;
 geometry.detector_size_px       = [1, 204];
@@ -75,8 +72,7 @@ ylabel('Y')
 zlabel('Z')
 
 %% Move mesh to moment of trigger activation
-delay = 0; %1.3;
-[translation, ~, closest_pt] = calc_start(moving_mesh, conv_belt.speed_vector, conv_belt.trigger, delay);
+[translation, ~, closest_pt] = conv_belt.calc_start(moving_mesh);
 moving_mesh.vertices         = moving_mesh.vertices + translation;
 closest_pt = closest_pt + translation;
 
