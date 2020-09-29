@@ -111,7 +111,7 @@ classdef cad_projector < handle
             % detector normal.
             obj.detector_normal = normalizeVector3d(geometry.detector_normal);
             if ~isequal(obj.detector_normal, normalizeVector3d(-obj.detector_origin_vector))
-                initial_normal = - obj.detector_origin_vector;
+                initial_normal = [0,0,1]; %- obj.detector_origin_vector;
                 rotation_angle  = vectorAngle3d(obj.detector_normal,...
                                                 initial_normal);
                 rotation_axis   = cross(obj.detector_normal,...
