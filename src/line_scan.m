@@ -102,16 +102,40 @@ duration    = geometry.n_scans/geometry.line_rate;
 start_point = start_point + translation; % start at trigger activation
 end_point   = start_point + conv_belt.speed_vector * duration;
 positions   = linspaceNDim(start_point, end_point, geometry.n_scans)';
-n_proj      = size(positions, 1);
 
 %% Simulate the projection using Lambert-Beer law
 tic
+n_proj      = size(positions, 1);
 projs = NaN(n_proj, geometry.detector_size_px(2));
+vertices = NaN(size(moving_mesh.vertices,1), 3, n_proj);
 for i = 1:n_proj
-moving_mesh.vertices = mesh.vertices + positions(i,:);
+vertices(:,:,i) = mesh.vertices + positions(i,:);
+moving_mesh.vertices = vertices(:,:,i);
 projs(i,:) = my_cad_projector.get_projection(moving_mesh,...
                                              'LambertBeer', true,...
                                              'LinearAttenuationCoeff', 0.0015);
 end
 toc
 figure;imshow(mat2gray(projs))
+
+%% Visualize intermediate scene
+intermediate_mesh = moving_mesh;
+intermediate_mesh.vertices = vertices(:,:,round(end/2));
+figure;
+patch(intermediate_mesh,'FaceColor', [0.3, 0.8, 0.3], 'FaceAlpha', 0.5, 'EdgeAlpha', 0.3)
+patch(ray, 'FaceColor', 'y', 'FaceAlpha', 0.3, 'EdgeColor', 'None')
+axis equal; view(3); rotate3d on
+hold on
+scatter3(my_cad_projector.detector_points(:,1),...
+    my_cad_projector.detector_points(:,2),...
+    my_cad_projector.detector_points(:,3));
+scatter3(my_cad_projector.source_origin_vector(1),...
+    my_cad_projector.source_origin_vector(2),...
+    my_cad_projector.source_origin_vector(3), 100, 'filled', 'k');
+drawLine3d(conv_belt.trigger, 'Color', 'r')
+drawPlane3d(conv_belt.plane, 'FaceColor', [0.9, 0.9, 0.9], 'FaceAlpha', 0.5)
+drawCube(box, 'FaceColor', [0.9, 0.9, 0.9], 'FaceAlpha', 0.5)
+axis equal; view(3); rotate3d on
+xlabel('X')
+ylabel('Y')
+zlabel('Z')
