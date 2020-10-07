@@ -10,8 +10,12 @@ classdef CADProjector < handle
 %
 % Properties
 % ----------
-% source:     X-ray source, see Source class
-% detector:   X-ray detector, see Detector class
+% source:   X-ray source, see Source class
+% detector: X-ray detector, see Detector class
+% ray:      Mesh representing the X-rays from source to detector. The
+%           vertices are the source and detector corners. The faces are 
+%           patches form to source to neighbouring corners of the detector.
+%               Struct with 'faces' and 'vertices' fields
 %   
 % Methods
 % -------
@@ -43,12 +47,14 @@ classdef CADProjector < handle
     properties
         source
         detector
+        ray
     end
     
     methods
         function obj = CADProjector(source, detector)
             obj.source = source;
             obj.detector = detector;
+            obj.get_ray()
         end
         
         function projection = get_projection(obj, input_mesh, varargin)
@@ -120,6 +126,24 @@ classdef CADProjector < handle
             projection = reshape(projection, obj.detector.detector_size_px); 
         end
         
+        function get_ray(obj)
+            if (obj.detector.detector_size_px(1) == 1) || ...
+                    (obj.detector.detector_size_px(2) == 1)
+                obj.ray.vertices = [obj.source.source_origin_vector;...
+                    obj.detector.detector_points(1,:);...
+                    obj.detector.detector_points(end,:)];
+                obj.ray.faces = [1, 2, 3];
+            else
+                obj.ray.vertices = [obj.source.source_origin_vector;...
+                    obj.detector.detector_points(1,:);...
+                    obj.detector.detector_points(obj.detector.detector_size_px(1),:);...
+                    obj.detector.detector_points(end - obj.detector.detector_size_px(1) + 1,:);...
+                    obj.detector.detector_points(end,:)];
+                obj.ray.faces = [1, 2, 3; 1, 2, 4; 1, 3, 5; 1, 4, 5];
+            end
+            
+        end
+        
         function plot_geometry(obj, varargin)
             %PLOT_GEOMETRY plots the geometry of the CAD projector with a
             % sample mesh if provided
@@ -144,21 +168,6 @@ classdef CADProjector < handle
             addParameter(p, 'SourcePointSize', 100);
             parse(p, varargin{:})
             
-            if (obj.detector.detector_size_px(1) == 1) || ...
-                    (obj.detector.detector_size_px(2) == 1)
-                ray.vertices = [obj.source.source_origin_vector;...
-                    obj.detector.detector_points(1,:);...
-                    obj.detector.detector_points(end,:)];
-                ray.faces = [1, 2, 3];
-            else
-                ray.vertices = [obj.source.source_origin_vector;...
-                    obj.detector.detector_points(1,:);...
-                    obj.detector.detector_points(obj.detector.detector_size_px(1),:);...
-                    obj.detector.detector_points(end - obj.detector.detector_size_px(1) + 1,:);...
-                    obj.detector.detector_points(end,:)];
-                ray.faces = [1, 2, 3; 1, 2, 4; 1, 3, 5; 1, 4, 5];
-            end
-            
             figure; hold on
             scatter3(obj.detector.detector_points(:,1),...
                 obj.detector.detector_points(:,2),...
@@ -168,7 +177,7 @@ classdef CADProjector < handle
                 obj.source.source_origin_vector(2),...
                 obj.source.source_origin_vector(3), p.Results.SourcePointSize,...
                 p.Results.SourceColor,'filled');
-            patch(ray,'FaceColor', p.Results.RayFaceColor,...
+            patch(obj.ray,'FaceColor', p.Results.RayFaceColor,...
                     'FaceAlpha', p.Results.RayFaceAlpha,...
                     'EdgeColor', p.Results.RayEdgeColor)
             if ~isempty(p.Results.Mesh)
