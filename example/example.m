@@ -1,13 +1,9 @@
 %% Define a geometry of the system
-geometry.source_origin_vector     = [0 0 500];
-geometry.detector_origin_vector   = [0 0 -500];
-geometry.pixel_size                 = 1;
-geometry.detector_size_px           = [250, 250];
-geometry.detector_normal            = [0 0.5 1];
+source = Source([0, 0, 500]);
+detector = Detector([0, 0, -500], 1, [1, 250], [0, 0.5, 1]);
 
-%% Create a cad_projector instance with the geometry
-my_cad_projector = cad_projector();
-my_cad_projector = my_cad_projector.build(geometry);
+%% Create a cad_projector instance with the source and detector geometry
+cad_projector = CADProjector(source, detector);
 
 %% Load a sample mesh
 mesh = stlread('apple.stl');
@@ -27,24 +23,11 @@ patch(mesh,'FaceColor', [0.3, 0.8, 0.3], 'FaceAlpha', 0.5, 'EdgeAlpha', 0.3)
 axis equal; view(3); rotate3d on
 
 %% Visualize the geometry with the sample
-figure;
-patch(mesh,'FaceColor', [0.3, 0.8, 0.3], 'FaceAlpha', 0.5, 'EdgeAlpha', 0.3)
-axis equal; view(3); rotate3d on
-hold on
-scatter3(my_cad_projector.detector_points(:,1),...
-    my_cad_projector.detector_points(:,2),...
-    my_cad_projector.detector_points(:,3));
-scatter3(my_cad_projector.source_origin_vector(1),...
-    my_cad_projector.source_origin_vector(2),...
-    my_cad_projector.source_origin_vector(3), 20, 'filled');
-axis equal; view(3); rotate3d on
-xlabel('X')
-ylabel('Y')
-zlabel('Z')
+cad_projector.plot_geometry('Mesh', mesh)
 
 %% Simulate the projection using Lambert-Beer law
 tic
-projection = my_cad_projector.get_projection(mesh,...
+projection = cad_projector.get_projection(mesh,...
                                              'LambertBeer', true,...
                                              'LinearAttenuationCoeff', 0.0015);
 toc
