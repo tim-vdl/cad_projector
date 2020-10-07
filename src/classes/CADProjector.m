@@ -142,6 +142,8 @@ classdef CADProjector < handle
                 obj.ray.faces = [1, 2, 3; 1, 2, 4; 1, 3, 5; 1, 4, 5];
             end
             
+            ray = obj.ray;
+            
         end
         
         function plot_geometry(obj, varargin)

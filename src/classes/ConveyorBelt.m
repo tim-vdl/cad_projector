@@ -55,44 +55,64 @@ classdef ConveyorBelt
             obj.delay = delay;
         end
         
-        function [translation, time, closest_pt] = calc_start(obj, mesh)
-        % CALC_START calculates when and where a mesh will intersect a trigger
-        % Input
-        % -----
-        % mesh:         Struct with vertices and faces fields
-        %
-        % Output
-        % ------
-        % translation:  Translation (1x3 vector) to be done by the mesh to activate 
-        %               the trigger
-        % time:         Time (s) between start of the movement and trigger
-        %               activation
-        % closest_pt:   Coordinates of the point on the mesh that will activate the
-        %               trigger
+        function mesh = place_on_belt(mesh, relative_position, relative_height)
+            % Initial position of the mesh
+            start_point = -relative_position * conveyor_belt.direction;
+            mesh.vertices = mesh.vertices + start_point;
+            
+            % Set height above conveyor belt
+            pos = linePosition3d(mesh.vertices, [[0,0,0],obj.normal]);
+            translation = min(pos); % translation for making contact with belt
+            mesh.vertices = mesh.vertices + ...
+                (relative_height - translation) * conveyor_belt.normal;
+        end
         
-        % Find all points of the mesh that will intersect with the trigger
-        trigger_plane = createPlane(obj.trigger(1:3), obj.normal);
-        polys = intersectPlaneMesh(trigger_plane, mesh.vertices, mesh.faces);
-        polys = rmoutliers(polys{1});
-        n_points = size(polys, 1);
-        % Find the closest point of the mesh to the trigger. This point
-        % will activate (i.e. intersect with) the trigger first.
-        smallest_dist = Inf;
-        closest_pt = NaN(1,3);
-        for i = 1:n_points
-           point = polys(i,:);
-           dist = distancePointLine3d(point, obj.trigger);
-           if dist < smallest_dist
-               smallest_dist = dist;
-               closest_pt = point;
-           end
-        end
-        % Calculate the time and translation of the mesh required for
-        % activating the trigger
-        time = smallest_dist/norm(obj.speed_vector) + obj.delay;
-        translation = obj.speed_vector * time;
-        end
+        function [mesh, translation, time, closest_pt] = calc_start(obj, mesh)
+            % CALC_START calculates when and where a mesh will intersect a trigger
+            % Input
+            % -----
+            % mesh:         Struct, with 'faces' and 'vertices' fields
+            %
+            % Output
+            % ------
+            % mesh:         Mesh translated to the point the trigger is
+            %               activated
+            %                   Struct, with 'faces' and 'vertices' fields
+            % translation:  Translation to be done by the mesh to activate 
+            %               the trigger
+            %                   1x3 vector
+            % time:         Time (s) between start of the movement and trigger
+            %               activation
+            %                   Float
+            % closest_pt:   Coordinates of the point on the mesh activated the
+            %               trigger at the moment of trigger activation
+            %                   1x3 vector
 
+            % Find all points of the mesh that will intersect with the trigger
+            trigger_plane = createPlane(obj.trigger(1:3), obj.normal);
+            polys = intersectPlaneMesh(trigger_plane, mesh.vertices, mesh.faces);
+            polys = rmoutliers(polys{1});
+            n_points = size(polys, 1);
+            % Find the closest point of the mesh to the trigger. This point
+            % will activate (i.e. intersect with) the trigger first.
+            smallest_dist = Inf;
+            closest_pt = NaN(1,3);
+            for i = 1:n_points
+               point = polys(i,:);
+               dist = distancePointLine3d(point, obj.trigger);
+               if dist < smallest_dist
+                   smallest_dist = dist;
+                   closest_pt = point;
+               end
+            end
+            % Calculate the time and translation of the mesh required for
+            % activating the trigger
+            time = smallest_dist/norm(obj.speed_vector) + obj.delay;
+            translation = obj.speed_vector * time;
+            mesh.vertices = mesh.vertices + translation;
+            closest_pt = closest_pt + translation;
+        end
+        
     end
 end
 
