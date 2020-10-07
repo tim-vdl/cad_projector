@@ -119,6 +119,69 @@ classdef CADProjector < handle
             % image shape.
             projection = reshape(projection, obj.detector.detector_size_px); 
         end
+        
+        function plot_geometry(obj, varargin)
+            %PLOT_GEOMETRY plots the geometry of the CAD projector with a
+            % sample mesh if provided
+            
+            % Parse inputs
+            p = inputParser;
+            p.StructExpand = false;
+            % Mesh visualization options
+            addParameter(p, 'Mesh', []);
+            addParameter(p, 'MeshFaceColor', [0.3, 0.8, 0.3]);
+            addParameter(p, 'MeshFaceAlpha', 0.5);
+            addParameter(p, 'MeshEdgeAlpha', 0.3);
+            % X-ray visualization options
+            addParameter(p, 'RayFaceColor', [1, 1, 0]);
+            addParameter(p, 'RayFaceAlpha', 0.3);
+            addParameter(p, 'RayEdgeColor', 'None');
+            % Detector
+            addParameter(p, 'DetectorColor', [0.1, 0.1, 0.8]);
+            addParameter(p, 'DetectorPointSize', 20);
+            % Source
+            addParameter(p, 'SourceColor', 'k');
+            addParameter(p, 'SourcePointSize', 100);
+            parse(p, varargin{:})
+            
+            if (obj.detector.detector_size_px(1) == 1) || ...
+                    (obj.detector.detector_size_px(2) == 1)
+                ray.vertices = [obj.source.source_origin_vector;...
+                    obj.detector.detector_points(1,:);...
+                    obj.detector.detector_points(end,:)];
+                ray.faces = [1, 2, 3];
+            else
+                ray.vertices = [obj.source.source_origin_vector;...
+                    obj.detector.detector_points(1,:);...
+                    obj.detector.detector_points(obj.detector.detector_size_px(1),:);...
+                    obj.detector.detector_points(end - obj.detector.detector_size_px(1) + 1,:);...
+                    obj.detector.detector_points(end,:)];
+                ray.faces = [1, 2, 3; 1, 2, 4; 1, 3, 5; 1, 4, 5];
+            end
+            
+            figure; hold on
+            scatter3(obj.detector.detector_points(:,1),...
+                obj.detector.detector_points(:,2),...
+                obj.detector.detector_points(:,3), p.Results.DetectorPointSize,...
+                p.Results.DetectorColor, 'filled');
+            scatter3(obj.source.source_origin_vector(1),...
+                obj.source.source_origin_vector(2),...
+                obj.source.source_origin_vector(3), p.Results.SourcePointSize,...
+                p.Results.SourceColor,'filled');
+            patch(ray,'FaceColor', p.Results.RayFaceColor,...
+                    'FaceAlpha', p.Results.RayFaceAlpha,...
+                    'EdgeColor', p.Results.RayEdgeColor)
+            if ~isempty(p.Results.Mesh)
+                patch(p.Results.Mesh,'FaceColor', p.Results.MeshFaceColor,...
+                    'FaceAlpha', p.Results.MeshFaceAlpha,...
+                    'EdgeAlpha', p.Results.MeshEdgeAlpha)
+            end
+            axis equal; view(3); rotate3d on
+            xlabel('X')
+            ylabel('Y')
+            zlabel('Z')
+            hold off;
+        end
     end
 end
 
