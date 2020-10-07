@@ -20,7 +20,7 @@ classdef Detector
     %                           in 3D space
     %                               Nx3 matrix, with N as the number of pixels
     % line_rate:                Number of scans per second (Hz) taken by
-    %                           the detector
+    %                           the detector (optional, default=NaN)
     %                               float
     
     properties
@@ -34,12 +34,23 @@ classdef Detector
     end
     
     methods
-        function obj = Detector(detector_origin_vector,pixel_size, detector_size_px, detector_normal, line_rate)
+        function obj = Detector(detector_origin_vector,...
+                pixel_size,...
+                detector_size_px,...
+                detector_normal,...
+                line_rate)
+            
+            switch nargin
+                case 4
+                    % Line rate not specified by user, so use default
+                    obj.line_rate = NaN;
+                case 5
+                    obj.line_rate = line_rate;
+            end
             obj.detector_origin_vector = detector_origin_vector;
             obj.pixel_size = pixel_size;             
             obj.detector_size_px = detector_size_px;
             obj.detector_normal = detector_normal;
-            obj.line_rate = line_rate;
             
             % Get the detector size in real world dimensions
             obj.detector_size          = obj.detector_size_px * obj.pixel_size;
@@ -55,7 +66,7 @@ classdef Detector
             
             % Transform (rotate) points to the detector pose using the
             % detector normal
-            obj.detector_normal = normalizeVector3d(geometry.detector_normal);
+            obj.detector_normal = normalizeVector3d(obj.detector_normal);
             if ~isequal(obj.detector_normal, normalizeVector3d(-obj.detector_origin_vector))
                 initial_normal = [0,0,1]; %- obj.detector_origin_vector;
                 rotation_angle  = vectorAngle3d(obj.detector_normal,...
