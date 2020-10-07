@@ -1,16 +1,12 @@
 clear;
 clc;
-%% Define the conveyorbelt
-conveyor_belt = ConveyorBelt([0, 1, 0],...      % direction
-                         [0.1,0,0.9],...    % normal
-                         270,...            % speed
-                         -75,...            % trigger position
-                         30,...             % trigger height
-                         0);                % delay
 
 %% Define a geometry of the system
-trans = createRotationOx(deg2rad(26));
+% X-ray source
+trans = createRotationOx(deg2rad(25));
 source = Source(transformPoint3d([0, 0, 471.8], trans));
+
+% X-ray detector
 detector_origin_vector = transformPoint3d([0, 0, -152.5], trans);
 detector = Detector(detector_origin_vector,...
     8 * 1.3500e-01,...
@@ -18,8 +14,17 @@ detector = Detector(detector_origin_vector,...
     unit_vect(detector_origin_vector),...
     250);
 
+% Conveyor belt
+conveyor_belt = ConveyorBelt([0, 1, 0],...  % direction
+                         [0.1,0,0.9],...    % normal
+                         270,...            % speed
+                         -75,...            % trigger position
+                         30,...             % trigger height
+                         0);                % delay
+
 
 geometry.n_scans                = 250;
+
 %% Create a cad_projector instance with the geometry
 cad_projector = CADProjector(source, detector);
 
@@ -28,16 +33,19 @@ mesh = stlread('apple.stl');
 mesh = reducepatch(mesh, 0.1); % Reduce number of vertices
 mesh = smooth_this_mesh(mesh, 1);
 mesh.vertices = (mesh.vertices - mean(mesh.vertices, 1)); % Center
+
 % Apply a random rotation
 random_axis  = rand(1,3);
 random_axis  = random_axis / norm(random_axis); 
 random_angle = rand(1) * 2 * pi;
 rotm = axang2rotm([random_axis, random_angle]);
 mesh.vertices = mesh.vertices * rotm;
+
 % Find contact point with conveyor belt
 pos = linePosition3d(mesh.vertices, [[0,0,0],conveyor_belt.normal]);
 translation = min(pos);
 mesh.vertices = mesh.vertices - translation * conveyor_belt.normal;
+
 % Initial position of the mesh
 start_point = -150 * conveyor_belt.direction;
 moving_mesh = mesh;
@@ -65,6 +73,7 @@ xlabel('X')
 ylabel('Y')
 zlabel('Z')
 hold off
+
 %% Move mesh to moment of trigger activation
 [translation, ~, closest_pt] = conveyor_belt.calc_start(moving_mesh);
 moving_mesh.vertices         = moving_mesh.vertices + translation;
