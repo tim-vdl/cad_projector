@@ -54,7 +54,7 @@ classdef CADProjector < handle
         function obj = CADProjector(source, detector)
             obj.source = source;
             obj.detector = detector;
-            obj.get_ray()
+            obj.get_ray();
         end
         
         function projection = get_projection(obj, input_mesh, varargin)
@@ -126,7 +126,7 @@ classdef CADProjector < handle
             projection = reshape(projection, obj.detector.detector_size_px); 
         end
         
-        function get_ray(obj)
+        function ray = get_ray(obj)
             if (obj.detector.detector_size_px(1) == 1) || ...
                     (obj.detector.detector_size_px(2) == 1)
                 obj.ray.vertices = [obj.source.source_origin_vector;...
