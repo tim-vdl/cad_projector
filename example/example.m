@@ -1,6 +1,6 @@
 %% Define a geometry of the system
 source = Source([0, 0, 500]);
-detector = Detector([0, 0, -500], 1, [1, 250], [0, 0.5, 1]);
+detector = Detector([0, 0, -500], 1, [250, 250], [0, 0.5, 1]);
 
 %% Create a cad_projector instance with the source and detector geometry
 cad_projector = CADProjector(source, detector);
