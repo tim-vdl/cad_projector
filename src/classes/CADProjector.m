@@ -153,6 +153,7 @@ classdef CADProjector < handle
             % Parse inputs
             p = inputParser;
             p.StructExpand = false;
+            p.KeepUnmatched=true; % Spelling mistakes will not me found
             % Mesh visualization options
             addParameter(p, 'Mesh', []);
             addParameter(p, 'MeshFaceColor', [0.3, 0.8, 0.3]);
@@ -191,7 +192,6 @@ classdef CADProjector < handle
             xlabel('X')
             ylabel('Y')
             zlabel('Z')
-            hold off;
         end
     end
 end
