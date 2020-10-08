@@ -55,16 +55,17 @@ classdef ConveyorBelt
             obj.delay = delay;
         end
         
-        function mesh = place_on_belt(mesh, relative_position, relative_height)
-            % Initial position of the mesh
-            start_point = -relative_position * conveyor_belt.direction;
-            mesh.vertices = mesh.vertices + start_point;
+        function mesh = place_on_belt(obj, mesh, rel_direction, rel_tilt, rel_height)
+            % Set position on conveyor belt (x and y)
+            translation = rel_direction * obj.direction + ...
+                rel_tilt * obj.tilt;
+            mesh.vertices = mesh.vertices + translation;
             
             % Set height above conveyor belt
             pos = linePosition3d(mesh.vertices, [[0,0,0],obj.normal]);
             translation = min(pos); % translation for making contact with belt
             mesh.vertices = mesh.vertices + ...
-                (relative_height - translation) * conveyor_belt.normal;
+                (rel_height - translation) * obj.normal;
         end
         
         function [mesh, translation, time, closest_pt] = calc_start(obj, mesh)
