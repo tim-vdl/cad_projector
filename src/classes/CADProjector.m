@@ -89,8 +89,6 @@ classdef CADProjector < handle
             source_origin   = obj.source.source_origin_vector;
             
             parfor p = 1:n_points
-                fprintf('... working on point %i of %i \n', p, n_points)
-                
                 detector_point = points(p,:);
                 ray_path       = [source_origin, detector_point - source_origin];
                 intersection_points = intersectLineMesh3d(ray_path,...
