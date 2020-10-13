@@ -21,9 +21,7 @@ conveyor_belt = ConveyorBelt([0, 1, 0],...  % direction
                          30,...             % trigger height
                          0);                % delay
 
-%% Create a cad_projector instance with the geometry
-cad_projector = CADProjector(source, detector);
-%%
+%% Define the line scanner
 line_scanner = LineScanner(source, detector, conveyor_belt, 'NumberOfScans', 250);
 
 %% Load a sample mesh
