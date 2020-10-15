@@ -12,23 +12,33 @@ detector_origin_vector = transformPoint3d([0, 0, -150], trans);
 direction = unit_vect([0.03, 0.92, 0.05]);
 normal = transformPoint3d(direction, createRotationOx(deg2rad(90)));
 trigger_pos = -70;
+placement_tilt = 0;
+euler_mesh = [0, 0, 0];
 
-x0 = NaN(1,10);
+x0 = NaN(1,14);
 x0(1:3) = source_origin_vector;
 x0(4:6) = detector_origin_vector;
 x0(7:9) = direction;
-x0(10) = trigger_pos;
+x0(10)  = trigger_pos;
+x0(11)  = placement_tilt;
+x0(12:14) = euler_mesh;
 
 %% Boundary conditions
 lb = [-300, -300, 200,... % source
     -100, -100, -300,...  % detector
-    -0.1, 0.5, 0.1,...    % direction
-    -110];                % trigger pos
+    -0.1, 0.5, -0.1,...   % direction
+    -110,...              % trigger pos
+    -20,...               % tilt
+    -180, -180, -180];    % euler
 
 ub = [300, 300, 1000,...  % source
     100, 100, -100,...    % detector
     0.1, 1, 0.1,...       % direction
-    0];                   % trigger pos
+    0,...                 % trigger pos
+    20,...                % tilt
+    180, 180, 180];    % euler
+
+nonlcon = @src_det_constraint;
 
 %% Show start
 [scan_A, scan_B, line_scanner_A, line_scanner_B] = simulate_scans(lb);
@@ -61,7 +71,7 @@ line_scanner_B.plot_geometry('Mesh', mesh_B)
 opts = optimoptions('fmincon', ...
     'Display', 'iter',...
     'UseParallel', true);
-x = fmincon(@obj_fun, x0, [], [], [], [], lb, ub, [], opts);
+x = fmincon(@obj_fun, x0, [], [], [], [], lb, ub, nonlcon, opts);
 
 %% Show end result
 [scan_A, scan_B, line_scanner_A, line_scanner_B] = simulate_scans(x);
@@ -72,6 +82,10 @@ subplot(1,2,2); imshow(scan_B); title('Scan B')
 
 figure;
 imshowpair(scan_A, scan_B); title('Difference between Scan A and B')
+
+%%
+figure;
+line_scanner_B.plot_geometry()
 
 %% Function definitions
 function [scan_A, scan_B, line_scanner_A, line_scanner_B] = simulate_scans(x)
@@ -85,6 +99,9 @@ function [scan_A, scan_B, line_scanner_A, line_scanner_B] = simulate_scans(x)
     trigger_pos = -30;
     trigger_height = 20;
     delay = 0;
+    placement_direction = -150;
+    placement_tilt = -15;
+    euler_mesh = [30 20 10];
 
     % Define the true geometry
     trans = createRotationOx(deg2rad(25)); % source and detector will be at 25 degree angle from vertical
@@ -109,12 +126,26 @@ function [scan_A, scan_B, line_scanner_A, line_scanner_B] = simulate_scans(x)
     % Define the ground truth line scanner
     line_scanner_A = LineScanner(source, detector, conveyor_belt, 'NumberOfScans', n_scans);
 
+    % Create a mesh of a cube
+    mesh = createCube();
+    mesh.vertices = mesh.vertices * 50;
+    mesh = rmfield(mesh,'edges');
+    mesh.vertices = (mesh.vertices - mean(mesh.vertices, 1)); % center around origin
+
+    % Move mesh to start position on scanner A
+    trans = eulerAnglesToRotation3d(euler_mesh);
+    mesh_A = transformMesh(mesh, trans);
+    mesh_A = line_scanner_A.conveyor_belt.place_on_belt(mesh_A, placement_direction, placement_tilt, 0);
+    mesh_A = line_scanner_A.conveyor_belt.calc_start(mesh_A);
+    
     % Define the predicted geometry
     source_origin_vector = x(1:3);
     detector_origin_vector = x(4:6);
     direction = x(7:9);
     normal = transformPoint3d(direction, createRotationOx(deg2rad(90)));
     trigger_pos = x(10);
+    placement_tilt = x(11);
+    euler_mesh = x(12:14);
 
     source = Source(source_origin_vector);
     % X-ray detector
@@ -131,17 +162,11 @@ function [scan_A, scan_B, line_scanner_A, line_scanner_B] = simulate_scans(x)
                                  trigger_height,... % trigger height
                                  delay);            % delay
     line_scanner_B = LineScanner(source, detector, conveyor_belt, 'NumberOfScans', n_scans);
-
-    % Create a mesh of a cube
-    mesh = createCube();
-    mesh.vertices = mesh.vertices * 50;
-    mesh = rmfield(mesh,'edges');
-    mesh.vertices = (mesh.vertices - mean(mesh.vertices, 1)); % center around origin
-
-    % Move meshes to start position
-    mesh_A = line_scanner_A.conveyor_belt.place_on_belt(mesh, -150, 0, 0);
-    mesh_A = line_scanner_A.conveyor_belt.calc_start(mesh_A);
-    mesh_B = line_scanner_B.conveyor_belt.place_on_belt(mesh, -150, 0, 0);
+    
+    % Move mesh to start position on scanner B
+    trans = eulerAnglesToRotation3d(euler_mesh);
+    mesh_B = transformMesh(mesh, trans);
+    mesh_B = line_scanner_B.conveyor_belt.place_on_belt(mesh_B, placement_direction, placement_tilt, 0);
     mesh_B = line_scanner_B.conveyor_belt.calc_start(mesh_B);
 
     % Simulate the line scans
@@ -158,4 +183,13 @@ function loss = obj_fun(x)
 % Calculate the error
 loss = immse(scan_A, scan_B);
 
+end
+
+%% Constraints
+function [c, ceq] = src_det_constraint(x)
+source = x(1:3);
+detector = x(4:6);
+D = distancePoints3d(source, detector);
+c = D - 625;
+ceq = [];
 end
