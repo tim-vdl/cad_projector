@@ -60,8 +60,18 @@ classdef LineScanner < CADProjector
             obj.scan_positions = linspaceNDim(start_position, end_position, obj.n_scans)';
         end
         
-        function [scan, meshes] = line_scan(obj, mesh)
+        function [scan, meshes] = line_scan(obj, mesh, varargin)
             %LINESCAN
+            p = inputParser;
+            p.StructExpand = false;
+            addRequired(p, 'mesh');
+            addParameter(p, 'LambertBeer', false);
+            addParameter(p, 'LinearAttenuationCoeff', []);
+            parse(p, mesh, varargin{:});
+            
+            lambert_beer = p.Results.LambertBeer;
+            lin_att_coef = p.Results.LinearAttenuationCoeff;
+            
             start_position = mean(mesh.vertices,1);
             obj.calc_positions(start_position);
             n_proj = size(obj.scan_positions, 1);
@@ -71,9 +81,13 @@ classdef LineScanner < CADProjector
             for i = 1:n_proj
                 mesh.vertices = start_vertices + (obj.scan_positions(i,:) - start_position);
                 meshes{i} = mesh;
-                scan(i,:) = obj.get_projection(mesh,...
-                    'LambertBeer', true,...
-                    'LinearAttenuationCoeff', 0.0015);
+                if lambert_beer
+                    scan(i,:) = obj.get_projection(mesh,...
+                        'LambertBeer', lambert_beer,...
+                        'LinearAttenuationCoeff', lin_att_coef);
+                else
+                    scan(i,:) = obj.get_projection(mesh);
+                end
             end
         end
         
