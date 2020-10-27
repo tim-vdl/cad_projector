@@ -36,7 +36,7 @@ ub = [300, 300, 1000,...  % source
     0.1, 1, 0.1,...       % direction
     0,...                 % trigger pos
     20,...                % tilt
-    180, 180, 180];    % euler
+    180, 180, 180];       % euler
 
 nonlcon = @src_det_constraint;
 
@@ -60,7 +60,7 @@ mesh = rmfield(mesh,'edges');
 mesh.vertices = (mesh.vertices - mean(mesh.vertices, 1)); % center around origin
 
 % Move meshes to start position
-mesh_A = line_scanner_A.conveyor_belt.place_on_belt(mesh, -150, 0, 0);
+mesh_A = line_scanner_A.conveyor_belt.place_on_belt(mesh, -150, 0, 20);
 mesh_A = line_scanner_A.conveyor_belt.calc_start(mesh_A);
 mesh_B = line_scanner_B.conveyor_belt.place_on_belt(mesh, -150, 0, 0);
 %mesh_B = line_scanner_B.conveyor_belt.calc_start(mesh_B);
@@ -68,11 +68,12 @@ line_scanner_A.plot_geometry('Mesh', mesh_A)
 line_scanner_B.plot_geometry('Mesh', mesh_B)
 
 %% Optimize x
+tic;
 opts = optimoptions('fmincon', ...
     'Display', 'iter',...
     'UseParallel', true);
 x = fmincon(@obj_fun, x0, [], [], [], [], lb, ub, nonlcon, opts);
-
+toc;
 %% Show end result
 [scan_A, scan_B, line_scanner_A, line_scanner_B] = simulate_scans(x);
 loss = immse(scan_A, scan_B);
@@ -84,11 +85,11 @@ figure;
 imshowpair(scan_A, scan_B); title('Difference between Scan A and B')
 
 %%
-figure;
+line_scanner_A.plot_geometry()
 line_scanner_B.plot_geometry()
 
 %% Function definitions
-function [scan_A, scan_B, line_scanner_A, line_scanner_B] = simulate_scans(x)
+function [scan_A, scan_B, line_scanner_A, line_scanner_B, x_gt] = simulate_scans(x)
     % Define the shared variables
     pixel_size = 8 * 1.3500e-01;
     detector_width = 120; 
@@ -116,13 +117,25 @@ function [scan_A, scan_B, line_scanner_A, line_scanner_B] = simulate_scans(x)
         unit_vect(detector_origin_vector),...
         line_rate);
     % Conveyor belt
-    conveyor_belt = ConveyorBelt([0, 1, 0],...      % direction
-                                 [0, 0, 1],...      % normal
+    direction = [0, 1, 0];
+    normal = [0, 0, 1];
+    conveyor_belt = ConveyorBelt(direction,...      % direction
+                                 normal,...      % normal
                                  speed,...          % speed
                                  trigger_pos,...    % trigger position
                                  trigger_height,... % trigger height
                                  delay);            % delay
-
+    %
+    
+    x_gt = NaN(1,14);
+    x_gt(1:3) = source_origin_vector;
+    x_gt(4:6) = detector_origin_vector;
+    x_gt(7:9) = direction;
+    x_gt(10)  = trigger_pos;
+    x_gt(11)  = placement_tilt;
+    x_gt(12:14) = euler_mesh;
+    
+    
     % Define the ground truth line scanner
     line_scanner_A = LineScanner(source, detector, conveyor_belt, 'NumberOfScans', n_scans);
 
