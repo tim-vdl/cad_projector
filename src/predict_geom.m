@@ -9,30 +9,25 @@ source_origin_vector = transformPoint3d([0, 0, 470], transf);
 detector_origin_vector = transformPoint3d([0, 0, -150], transf);
 
 % Conveyor belt direction and normal
-direction = unit_vect([0.03, 0.92, 0.05]);
-normal = transformPoint3d(direction, createRotationOx(deg2rad(90)));
 trigger_pos = -70;
 placement_tilt = 0;
 euler_mesh = [0, 0, 0];
 
-x0 = NaN(1,14);
+x0 = NaN(1,11);
 x0(1:3) = source_origin_vector;
 x0(4:6) = detector_origin_vector;
-x0(7:9) = direction;
-x0(10)  = trigger_pos;
-x0(11)  = placement_tilt;
-x0(12:14) = euler_mesh;
+x0(7)  = trigger_pos;
+x0(8)  = placement_tilt;
+x0(9:11) = euler_mesh;
 
 %% Boundary conditions
 lb = [-300, -300, 200,... % source
     -100, -100, -300,...  % detector
-    -0.1, 0.5, -0.1,...   % direction
     -110,...              % trigger pos
     -20,...               % tilt
     -180, -180, -180];    % euler
 
 ub = [300, 300, 1000,...  % source
-    100, 100, -100,...    % detector
     0.1, 1, 0.1,...       % direction
     0,...                 % trigger pos
     20,...                % tilt
@@ -96,6 +91,8 @@ function [scan_A, scan_B, line_scanner_A, line_scanner_B, x_gt] = simulate_scans
     line_rate = 250;
     speed = 270;
     n_scans = 150;
+    direction = [0, 1, 0];
+    normal = [0, 0, 1];
 
     trigger_pos = -30;
     trigger_height = 20;
@@ -117,23 +114,19 @@ function [scan_A, scan_B, line_scanner_A, line_scanner_B, x_gt] = simulate_scans
         unit_vect(detector_origin_vector),...
         line_rate);
     % Conveyor belt
-    direction = [0, 1, 0];
-    normal = [0, 0, 1];
     conveyor_belt = ConveyorBelt(direction,...      % direction
-                                 normal,...      % normal
+                                 normal,...         % normal
                                  speed,...          % speed
                                  trigger_pos,...    % trigger position
                                  trigger_height,... % trigger height
                                  delay);            % delay
-    %
-    
-    x_gt = NaN(1,14);
+    % Create ground truth vector
+    x_gt = NaN(1,11);
     x_gt(1:3) = source_origin_vector;
     x_gt(4:6) = detector_origin_vector;
-    x_gt(7:9) = direction;
-    x_gt(10)  = trigger_pos;
-    x_gt(11)  = placement_tilt;
-    x_gt(12:14) = euler_mesh;
+    x_gt(7)  = trigger_pos;
+    x_gt(8)  = placement_tilt;
+    x_gt(9:11) = euler_mesh;
     
     
     % Define the ground truth line scanner
@@ -154,11 +147,9 @@ function [scan_A, scan_B, line_scanner_A, line_scanner_B, x_gt] = simulate_scans
     % Define the predicted geometry
     source_origin_vector = x(1:3);
     detector_origin_vector = x(4:6);
-    direction = x(7:9);
-    normal = transformPoint3d(direction, createRotationOx(deg2rad(90)));
-    trigger_pos = x(10);
-    placement_tilt = x(11);
-    euler_mesh = x(12:14);
+    trigger_pos = x(7);
+    placement_tilt = x(8);
+    euler_mesh = x(9:11);
         
     % X-ray source
     source = Source(source_origin_vector);
