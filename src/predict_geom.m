@@ -2,11 +2,11 @@ clear;
 clc;
 
 %% Define x0
-trans = createRotationOx(deg2rad(25)); % source and detector will be at 25 degree angle from vertical
+transf = createRotationOx(deg2rad(25)); % source and detector will be at 25 degree angle from vertical
 % X-ray source
-source_origin_vector = transformPoint3d([0, 0, 470], trans);
+source_origin_vector = transformPoint3d([0, 0, 470], transf);
 % X-ray detector
-detector_origin_vector = transformPoint3d([0, 0, -150], trans);
+detector_origin_vector = transformPoint3d([0, 0, -150], transf);
 
 % Conveyor belt direction and normal
 direction = unit_vect([0.03, 0.92, 0.05]);
@@ -105,12 +105,12 @@ function [scan_A, scan_B, line_scanner_A, line_scanner_B, x_gt] = simulate_scans
     euler_mesh = [30 20 10];
 
     % Define the true geometry
-    trans = createRotationOx(deg2rad(25)); % source and detector will be at 25 degree angle from vertical
+    transf = createRotationOx(deg2rad(25)); % source and detector will be at 25 degree angle from vertical
     % X-ray source
-    source_origin_vector = transformPoint3d([0, 0, 471.8], trans);
+    source_origin_vector = transformPoint3d([0, 0, 471.8], transf);
     source = Source(source_origin_vector);
     % X-ray detector
-    detector_origin_vector = transformPoint3d([0, 0, -152.5], trans);
+    detector_origin_vector = transformPoint3d([0, 0, -152.5], transf);
     detector = Detector(detector_origin_vector,...
         pixel_size,...
         [1, detector_width],...
@@ -159,7 +159,8 @@ function [scan_A, scan_B, line_scanner_A, line_scanner_B, x_gt] = simulate_scans
     trigger_pos = x(10);
     placement_tilt = x(11);
     euler_mesh = x(12:14);
-
+        
+    % X-ray source
     source = Source(source_origin_vector);
     % X-ray detector
     detector = Detector(detector_origin_vector,...
