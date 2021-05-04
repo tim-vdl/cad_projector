@@ -53,33 +53,35 @@ classdef Detector
             obj.detector_normal = detector_normal;
             
             % Get the detector size in real world dimensions
-            obj.detector_size          = obj.detector_size_px * obj.pixel_size;
+            obj.detector_size = obj.detector_size_px * obj.pixel_size;
             
             % Calculate the positions of the pixels
             x = linspace(0, obj.detector_size(2), obj.detector_size_px(2));
             x = x - mean(x);
             y = linspace(0, obj.detector_size(1), obj.detector_size_px(1));
             y = y - mean(y);
-            z = obj.detector_origin_vector(3);
+            z = 0;
             [X, Y, Z] = meshgrid(x, y, z);
             points    = [X(:), Y(:), Z(:)];
+            points = points - mean(points,1);
             
             % Transform (rotate) points to the detector pose using the
             % detector normal
             obj.detector_normal = normalizeVector3d(obj.detector_normal);
             if ~isequal(obj.detector_normal, normalizeVector3d(-obj.detector_origin_vector))
                 initial_normal = [0,0,1]; %- obj.detector_origin_vector;
-                rotation_angle  = vectorAngle3d(obj.detector_normal,...
+                rotation_angle  = -vectorAngle3d(obj.detector_normal,...
                                                 initial_normal);
                 rotation_axis   = cross(obj.detector_normal,...
                                         initial_normal);
-                rotation_matrix = rotationmat3D(rotation_angle,...
+                if mod(rotation_angle, pi) == 0
+                    rotation_matrix = eye(3);
+                else
+                    rotation_matrix = rotationmat3D(rotation_angle,...
                                                 rotation_axis);
-                detector_position_final = transformPoint3d(obj.detector_origin_vector,...
-                                                           rotation_matrix);
-                translation = detector_position_final - obj.detector_origin_vector;
+                end
                 obj.detector_points = transformPoint3d(points,...
-                                                       rotation_matrix) - translation;
+                    rotation_matrix) + obj.detector_origin_vector;
             else
                 obj.detector_points = points;
             end
