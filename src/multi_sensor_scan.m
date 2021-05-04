@@ -15,22 +15,29 @@ detector = Detector(detector_origin_vector,...
     250);
 % Conveyor belt
 conveyor_belt = ConveyorBelt([0, 1, 0],...  % direction
-                         [0, 0, 1],...    % normal
+                         [0, 0, 1],...      % normal
                          270,...            % speed
                          -75,...            % trigger position
-                         30,...             % trigger height
+                         15,...             % trigger height
                          0);                % delay
 
 %% Define the line scanner
 line_scanner = LineScanner(source, detector, conveyor_belt, 'NumberOfScans', 250);
 
 %% Load a sample mesh
-mesh = createCube();
-mesh.vertices = mesh.vertices * 50;
-mesh = rmfield(mesh,'edges');
-mesh.vertices = (mesh.vertices - mean(mesh.vertices, 1)); % center around origin
+triangulation = stlread('J:\SET-MEBIOS-POSTHARVEST-DI0414\TimVanDeLooverbosch_u0117721\duplo_phantom_01.stl');
+mesh.vertices = triangulation.Points;
+mesh.faces = triangulation.ConnectivityList;
+mesh.vertices = mesh.vertices - mean(mesh.vertices, 1); % center around origin
+mesh = ensureManifoldMesh(mesh);
+figure; patch(mesh, 'FaceColor', 'b', 'FaceAlpha', 0.5, 'EdgeColor', 'None')
+axis equal; rotate3d on; view(3)
+xlabel('X')
+ylabel('Y')
+zlabel('Z')
+title('Lego phantom')
 
-% Position on belt
+%% Position on belt
 mesh = line_scanner.conveyor_belt.place_on_belt(mesh, -150, 0, 0);
 
 %% Depth camera
@@ -51,19 +58,14 @@ multi_sensor_system.plot_geometry('Mesh', mesh)
 
 %% Simulate the projection using Lambert-Beer law
 tic
-[scan, mesh_measured, meshes, mesh_depth] = multi_sensor_system.multi_sensor_scan(mesh);
+[scan, mesh_measured, meshes, mesh_depth] = multi_sensor_system.multi_sensor_scan(mesh,...
+    'LambertBeer', 1,...
+    'LinearAttenuationCoeff', 0.05);
 toc
-figure;imshow(mat2gray(scan))
+figure;imshow(scan)
 
-%% Visualize intermediate scene
-% intermediate_mesh = meshes{round(end/2)};
-% line_scanner.plot_geometry('Mesh', intermediate_mesh)
-
-%% Visualize scene of depth measurement
+%% Visualize scene at time of depth measurement
 multi_sensor_system.plot_geometry('Mesh', mesh_depth)
 
-%% Show depth camera scene
-multi_sensor_system.depth_cam.show_scene(mesh_depth, 0)
+%% Show depth camera scene in perspective of depth camera
 multi_sensor_system.depth_cam.show_scene(mesh_depth, 1)
-
-
