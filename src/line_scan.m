@@ -25,7 +25,9 @@ conveyor_belt = ConveyorBelt([0, 1, 0],...  % direction
 line_scanner = LineScanner(source, detector, conveyor_belt, 'NumberOfScans', 250);
 
 %% Load a sample mesh
-mesh = stlread('apple.stl');
+triangulation = stlread('apple.stl');
+mesh.vertices = triangulation.Points;
+mesh.faces = triangulation.ConnectivityList;
 mesh = reducepatch(mesh, 0.1); % Reduce number of vertices
 mesh = smooth_this_mesh(mesh, 1);
 mesh.vertices = (mesh.vertices - mean(mesh.vertices, 1)); % Center
