@@ -4,10 +4,12 @@ clc;
 %% Define a geometry of the system
 trans = createRotationOx(deg2rad(25)); % source and detector will be at 25 degree angle from vertical
 % X-ray source
-source_origin_vector = transformPoint3d([0, 0, 471.8], trans);
+source_origin_vector = [0, 0, 471.8];
+source_origin_vector = transformPoint3d(source_origin_vector, trans);
 source = Source(source_origin_vector);
 % X-ray detector
-detector_origin_vector = transformPoint3d([0, 0, -152.5], trans);
+detector_origin_vector = [0, 0, -152.5];
+detector_origin_vector = transformPoint3d(detector_origin_vector, trans);
 detector = Detector(detector_origin_vector,...
     8 * 1.3500e-01,...
     [1, 204],...
@@ -15,7 +17,7 @@ detector = Detector(detector_origin_vector,...
     250);
 % Conveyor belt
 conveyor_belt = ConveyorBelt([0, 1, 0],...  % direction
-                         [0, 0, 1],...    % normal
+                         [0, 0, 1],...      % normal
                          270,...            % speed
                          -75,...            % trigger position
                          30,...             % trigger height
