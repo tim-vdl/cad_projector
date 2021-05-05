@@ -10,7 +10,7 @@ source_origin_vector = transformPoint3d([0, 0, 470], transf);
 detector_origin_vector = transformPoint3d([0, 0, -150], transf);
 
 % Conveyor belt direction and normal
-trigger_pos = 30;
+trigger_pos = -10;
 placement_tilt = 0;
 euler_mesh = [0 0 0];
 
@@ -30,7 +30,7 @@ lb = [-300, -300, 200,... % source
 
 ub = [300, 300, 1000,...  % source
     100, 100, 0.0,...       % detector
-    50,...                 % trigger pos
+    0,...                 % trigger pos
     20,...                % tilt
     180, 90, 180];       % euler
 
@@ -89,7 +89,10 @@ Results = MEIGO(problem, opts, 'ESS', mesh, scan_gt, @no_processing, @iou);
 toc
 %% Show result
 [scan, line_scanner] = simulate_scan(Results.xbest, mesh);
-line_scanner.plot_geometry()
+
+transf = eulerAnglesToRotation3d(Results.xbest(9:end));
+mesh_final = transformMesh(mesh, transf);
+line_scanner.plot_geometry('Mesh', mesh_final)
 
 figure;
 subplot(1,2,1)
