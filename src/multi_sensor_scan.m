@@ -9,7 +9,7 @@ source = Source(source_origin_vector);
 % X-ray detector
 detector_origin_vector = transformPoint3d([0, 0, -152.5], trans);
 detector = Detector(detector_origin_vector,...
-    8 * 1.3500e-01,...
+    5 * 1.3500e-01,...
     [1, 204],...
     unit_vect(detector_origin_vector),...
     250);
@@ -17,7 +17,7 @@ detector = Detector(detector_origin_vector,...
 conveyor_belt = ConveyorBelt([0, 1, 0],...  % direction
                          [0, 0, 1],...      % normal
                          270,...            % speed
-                         -75,...            % trigger position
+                         -120,...            % trigger position
                          15,...             % trigger height
                          0);                % delay
 
@@ -60,8 +60,9 @@ multi_sensor_system.plot_geometry('Mesh', mesh)
 tic
 [scan, mesh_measured, meshes, mesh_depth] = multi_sensor_system.multi_sensor_scan(mesh,...
     'LambertBeer', 1,...
-    'LinearAttenuationCoeff', 0.05);
+    'LinearAttenuationCoeff', 0.01);
 toc
+scan = flip(scan,2);
 figure;imshow(scan)
 
 %% Visualize scene at time of depth measurement
